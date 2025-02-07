@@ -8,10 +8,16 @@ import LoginForm from './components/LoginForm'
 import Togglable from './components/Togglable'
 import BlogForm from './components/BlogForm'
 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNotificationDispatch } from './components/NotificationContext'
+
 const App = () => {
+
+  const notificationDispatch = useNotificationDispatch()
+
   const [blogs, setBlogs] = useState([])
 
-  const [notificationMessage, setNotificationMessage] = useState(null)
+  // const [notificationMessage, setNotificationMessage] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
 
   const [username, setUsername] = useState('')
@@ -35,14 +41,15 @@ const App = () => {
     blogService
       .getAll()
       .then(initialBlogs => setBlogs(initialBlogs))
-  }, [notificationMessage])
+  }, [user])
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
-    setNotificationMessage('Logged out successfully')
+    // setNotificationMessage('Logged out successfully')
+    notificationDispatch({ type: "LOGOUT", payload: 'Logged out successfully' })
     setTimeout(() => {
-      setNotificationMessage(null)
+      notificationDispatch({ type: "CLEAR" })
     }, 5000)
   }
 
@@ -63,9 +70,13 @@ const App = () => {
       setUser(user) // Storing the user token
       setUsername('')
       setPassword('')
-      setNotificationMessage('Logged in successfully')
+      // setNotificationMessage('Logged in successfully')
+      // setTimeout(() => {
+      //   setNotificationMessage(null)
+      // }, 5000)
+      notificationDispatch({ type: "LOGIN", payload: 'Logged in successfully' })
       setTimeout(() => {
-        setNotificationMessage(null)
+        notificationDispatch({ type: "CLEAR" })
       }, 5000)
     } catch (exception) {
       setErrorMessage('Wrong credentials')
@@ -82,9 +93,13 @@ const App = () => {
       .create(blogObject)
       .then(returnedBlog => {
         setBlogs(blogs.concat(returnedBlog))
-        setNotificationMessage(`A new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
+        // setNotificationMessage(`A new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
+        // setTimeout(() => {
+        //   setNotificationMessage(null)
+        // }, 5000)
+        notificationDispatch({ type: "CREATE", payload: `A new blog ${returnedBlog.title} by ${returnedBlog.author} added` })
         setTimeout(() => {
-          setNotificationMessage(null)
+          notificationDispatch({ type: "CLEAR" })
         }, 5000)
       })
   }
@@ -103,9 +118,13 @@ const App = () => {
         setBlogs(
           blogs.map(blog => (blog.id === returnedBlog.id ? returnedBlog : blog))
         )
-        setNotificationMessage('Like added')
+        // setNotificationMessage('Like added')
+        // setTimeout(() => {
+        //   setNotificationMessage(null)
+        // }, 5000)
+        notificationDispatch({ type: "LIKE", payload: 'Like added' })
         setTimeout(() => {
-          setNotificationMessage(null)
+          notificationDispatch({ type: "CLEAR" })
         }, 5000)
       })
       .catch(error => {
@@ -124,9 +143,13 @@ const App = () => {
         .remove(id)
         .then(() => {
           setBlogs(blogs.filter(blog => blog.id !== id))
-          setNotificationMessage('Blog removed')
+          // setNotificationMessage('Blog removed')
+          // setTimeout(() => {
+          //   setNotificationMessage(null)
+          // }, 5000)
+          notificationDispatch({ type: "DELETE", payload: 'Blog removed' })
           setTimeout(() => {
-            setNotificationMessage(null)
+            notificationDispatch({ type: "CLEAR" })
           }, 5000)
         })
         .catch(error => {
@@ -141,7 +164,7 @@ const App = () => {
   return (
     <div>
       <h1>Blogs</h1>
-      <Notification message={notificationMessage} />
+      <Notification />
       <ErrorNotification message={errorMessage} />
 
       <Togglable buttonLabel='login'>

@@ -1,5 +1,17 @@
 import ReactDOM from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
 import App from './App'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+import { NotificationContextProvider } from './components/NotificationContext'
+
+const queryClient = new QueryClient()
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <NotificationContextProvider>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </NotificationContextProvider>
+)
