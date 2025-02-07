@@ -1,11 +1,18 @@
-const ErrorNotification = ({ message }) => {
-  if (message === null) {
-    return null
-  }
+import { useErrorNotificationValue } from "./ErrorNotificationContext"
+
+const ErrorNotification = () => {
+  
+  const errorNotification = useErrorNotificationValue()
 
   return (
-    <div className="error">
-      {message}
+    <div>
+      {errorNotification === null ?
+      <p></p>
+      :
+      <div className="error">
+        {errorNotification}
+      </div>
+      }
     </div>
   )
 }

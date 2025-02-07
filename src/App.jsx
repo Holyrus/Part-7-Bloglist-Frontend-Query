@@ -10,12 +10,16 @@ import BlogForm from './components/BlogForm'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNotificationDispatch } from './components/NotificationContext'
+import { useErrorNotificationDispatch } from './components/ErrorNotificationContext'
 
 const App = () => {
 
   const notificationDispatch = useNotificationDispatch()
+  const errorNotificationDispatch = useErrorNotificationDispatch()
 
   const [blogs, setBlogs] = useState([])
+
+  const [unauthorizedError, setUnauthorizedError] = useState(null)
 
   // const [notificationMessage, setNotificationMessage] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
@@ -38,10 +42,17 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    blogService
+    if (user) {
+      blogService
       .getAll()
       .then(initialBlogs => setBlogs(initialBlogs))
-  }, [user])
+      .catch((error) => {
+        if (error.response && error.response.status === 401) {
+          setUnauthorizedError('Unauthorized')
+        }
+      })
+    }
+  }, [user, unauthorizedError])
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
@@ -79,9 +90,13 @@ const App = () => {
         notificationDispatch({ type: "CLEAR" })
       }, 5000)
     } catch (exception) {
-      setErrorMessage('Wrong credentials')
+      // setErrorMessage('Wrong credentials')
+      // setTimeout(() => {
+      //   setErrorMessage(null)
+      // }, 5000)
+      errorNotificationDispatch({ type: "LOGIN", payload: 'Wrong credentials'})
       setTimeout(() => {
-        setErrorMessage(null)
+        errorNotificationDispatch({ type: "CLEAR" })
       }, 5000)
     }
   }
@@ -128,9 +143,13 @@ const App = () => {
         }, 5000)
       })
       .catch(error => {
-        setErrorMessage('Cannot add Like', error.response.data)
+        // setErrorMessage('Cannot add Like', error.response.data)
+        // setTimeout(() => {
+        //   setErrorMessage(null)
+        // }, 5000)
+        errorNotificationDispatch({ type: "LIKE", payload: `Cannot add Like, ${error.response.data}`})
         setTimeout(() => {
-          setErrorMessage(null)
+          errorNotificationDispatch({ type: "CLEAR" })
         }, 5000)
       })
   }
@@ -153,9 +172,13 @@ const App = () => {
           }, 5000)
         })
         .catch(error => {
-          setErrorMessage('Cannot remove blog', error.response.data)
+          // setErrorMessage('Cannot remove blog', error.response.data)
+          // setTimeout(() => {
+          //   setErrorMessage(null)
+          // }, 5000)
+          errorNotificationDispatch({ type: "DELETE", payload: `Cannot remove blog, ${error.response.data}`})
           setTimeout(() => {
-            setErrorMessage(null)
+            errorNotificationDispatch({ type: "CLEAR" })
           }, 5000)
         })
     }
@@ -177,7 +200,7 @@ const App = () => {
         />
       </Togglable>
 
-       {user !== null &&
+       {user !== null && unauthorizedError !== 'Unauthorized' ? 
         <div>
            <p>{user.name} logged-in</p>
            <button onClick={handleLogout}>Logout</button>
@@ -201,7 +224,9 @@ const App = () => {
               />
            ) : <p>No blogs</p>}
         </div>
-      }
+      :
+      <p></p>  
+    }
     </div>
   )
 }

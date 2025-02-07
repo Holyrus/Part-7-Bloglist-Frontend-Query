@@ -5,13 +5,16 @@ import App from './App'
 import './index.css'
 
 import { NotificationContextProvider } from './components/NotificationContext'
+import { ErrorNotificationContextProvider } from './components/ErrorNotificationContext'
 
 const queryClient = new QueryClient()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <NotificationContextProvider>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </NotificationContextProvider>
+  <ErrorNotificationContextProvider>
+    <NotificationContextProvider>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </NotificationContextProvider>
+  </ErrorNotificationContextProvider>
 )
