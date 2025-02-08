@@ -17,18 +17,31 @@ const App = () => {
   const notificationDispatch = useNotificationDispatch()
   const errorNotificationDispatch = useErrorNotificationDispatch()
 
-  const [blogs, setBlogs] = useState([])
+  // const [blogs, setBlogs] = useState([])
 
   const [unauthorizedError, setUnauthorizedError] = useState(null)
 
   // const [notificationMessage, setNotificationMessage] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
+  // const [errorMessage, setErrorMessage] = useState(null)
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null) // Here we store the user token
 
+  // const [newBlogCreated, setNewBlogCreated] = useState(false)
+
+  const queryClient = useQueryClient()
+
+  const newBlogMutation = useMutation({
+    mutationFn: blogService.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] })
+    },
+  })
+
   const blogFormRef = useRef()
+
+  //----------------------------------------------------
 
   // When we enter the page, all checks if user is already logged in and can be found in local storage
 
@@ -41,18 +54,33 @@ const App = () => {
     }
   }, [])
 
-  useEffect(() => {
-    if (user) {
-      blogService
-      .getAll()
-      .then(initialBlogs => setBlogs(initialBlogs))
-      .catch((error) => {
-        if (error.response && error.response.status === 401) {
-          setUnauthorizedError('Unauthorized')
-        }
-      })
-    }
-  }, [user, unauthorizedError])
+  const result = useQuery({
+    queryKey: ['blogs'],
+    queryFn: blogService.getAll,
+    refetchOnWindowFocus: false,
+    enabled: !!user // Only fetch blogs if the user is logged in
+  })
+
+  if (result.isLoading) {
+    return <div>Loading data...</div>
+  } 
+  
+
+  const blogs = result.data || []
+  console.log(blogs)
+
+  // useEffect(() => {
+  //   if (user) {
+  //     blogService
+  //     .getAll()
+  //     .then(initialBlogs => setBlogs(initialBlogs))
+  //     .catch((error) => {
+  //       if (error.response && error.response.status === 401) {
+  //         setUnauthorizedError('Unauthorized')
+  //       }
+  //     })
+  //   }
+  // }, [user, unauthorizedError, newBlogCreated])
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
@@ -101,23 +129,35 @@ const App = () => {
     }
   }
 
-  const addBlog = (blogObject) => {
+  const addBlog = async (blogObject) => {
     blogFormRef.current.toggleVisibility()
 
-    blogService
-      .create(blogObject)
-      .then(returnedBlog => {
-        setBlogs(blogs.concat(returnedBlog))
-        // setNotificationMessage(`A new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
-        // setTimeout(() => {
-        //   setNotificationMessage(null)
-        // }, 5000)
-        notificationDispatch({ type: "CREATE", payload: `A new blog ${returnedBlog.title} by ${returnedBlog.author} added` })
-        setTimeout(() => {
-          notificationDispatch({ type: "CLEAR" })
-        }, 5000)
-      })
+    newBlogMutation.mutate(blogObject)
+
+    notificationDispatch({ type: "CREATE", payload: `A new blog ${blogObject.title} by ${blogObject.author} added` })
+    setTimeout(() => {
+      notificationDispatch({ type: "CLEAR" })
+    }, 5000)
   }
+
+  // const addBlog = (blogObject) => {
+  //   blogFormRef.current.toggleVisibility()
+
+  //   blogService
+  //     .create(blogObject)
+  //     .then(returnedBlog => {
+  //       setBlogs(blogs.concat(returnedBlog))
+  //       // setNotificationMessage(`A new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
+  //       // setTimeout(() => {
+  //       //   setNotificationMessage(null)
+  //       // }, 5000)
+  //       setNewBlogCreated(!newBlogCreated)
+  //       notificationDispatch({ type: "CREATE", payload: `A new blog ${returnedBlog.title} by ${returnedBlog.author} added` })
+  //       setTimeout(() => {
+  //         notificationDispatch({ type: "CLEAR" })
+  //       }, 5000)
+  //     })
+  // }
 
   const updateBlog = id => {
     const likedBlog = blogs.find(blog => blog.id === id)
@@ -188,7 +228,7 @@ const App = () => {
     <div>
       <h1>Blogs</h1>
       <Notification />
-      <ErrorNotification message={errorMessage} />
+      <ErrorNotification />
 
       <Togglable buttonLabel='login'>
         <LoginForm
@@ -211,7 +251,7 @@ const App = () => {
            </Togglable>
            <h2>blogs</h2>
            { blogs.length !== 0 ?
-           blogs
+           [...blogs]
             .sort((a, b) => b.likes - a.likes)
             .map(blog =>
               <Blog
