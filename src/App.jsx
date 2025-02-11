@@ -17,18 +17,11 @@ const App = () => {
   const notificationDispatch = useNotificationDispatch()
   const errorNotificationDispatch = useErrorNotificationDispatch()
 
-  // const [blogs, setBlogs] = useState([])
-
   const [unauthorizedError, setUnauthorizedError] = useState(null)
-
-  // const [notificationMessage, setNotificationMessage] = useState(null)
-  // const [errorMessage, setErrorMessage] = useState(null)
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null) // Here we store the user token
-
-  // const [newBlogCreated, setNewBlogCreated] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -37,6 +30,26 @@ const App = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] })
     },
+  })
+
+  const updateBlogMutation = useMutation({
+    mutationFn: (updatedBlog) => blogService.update(updatedBlog.id, updatedBlog),
+    onSuccess: (updatedBlog) => {
+      queryClient.setQueryData(['blogs'], (oldData) => {
+        console.log(oldData)
+        return oldData.map(blog => blog.id === updatedBlog.id ? updatedBlog : blog)
+      })
+    }
+  })
+
+  const deleteBlogMutation = useMutation({
+    mutationFn: (deletedBlog) => blogService.remove(deletedBlog.id),
+    onSuccess: (deletedBlog) => {
+      queryClient.setQueryData(['blogs'], (oldData) => {
+        return oldData.filter(blog => blog.id !== deletedBlog.id)
+      })
+      queryClient.invalidateQueries(['blogs'])
+    }
   })
 
   const blogFormRef = useRef()
@@ -58,34 +71,33 @@ const App = () => {
     queryKey: ['blogs'],
     queryFn: blogService.getAll,
     refetchOnWindowFocus: false,
-    enabled: !!user // Only fetch blogs if the user is logged in
+    retry: false,
+    enabled: !!user, // Only fetch blogs if the user is logged in
+    onError: (error) => {
+      if (error.response && error.response.status === 401) {
+         setUnauthorizedError('Unauthorized')
+         setUser(null)
+         window.localStorage.removeItem('loggedBlogappUser')
+      }
+    }
   })
 
   if (result.isLoading) {
     return <div>Loading data...</div>
-  } 
+  } if (result.isError) {
+    return <div>Service is unavaiable</div>
+  }
   
 
   const blogs = result.data || []
-  console.log(blogs)
+  // console.log(blogs)
+  // console.log(result)
+  // console.log(unauthorizedError)
 
-  // useEffect(() => {
-  //   if (user) {
-  //     blogService
-  //     .getAll()
-  //     .then(initialBlogs => setBlogs(initialBlogs))
-  //     .catch((error) => {
-  //       if (error.response && error.response.status === 401) {
-  //         setUnauthorizedError('Unauthorized')
-  //       }
-  //     })
-  //   }
-  // }, [user, unauthorizedError, newBlogCreated])
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
-    // setNotificationMessage('Logged out successfully')
     notificationDispatch({ type: "LOGOUT", payload: 'Logged out successfully' })
     setTimeout(() => {
       notificationDispatch({ type: "CLEAR" })
@@ -109,19 +121,11 @@ const App = () => {
       setUser(user) // Storing the user token
       setUsername('')
       setPassword('')
-      // setNotificationMessage('Logged in successfully')
-      // setTimeout(() => {
-      //   setNotificationMessage(null)
-      // }, 5000)
       notificationDispatch({ type: "LOGIN", payload: 'Logged in successfully' })
       setTimeout(() => {
         notificationDispatch({ type: "CLEAR" })
       }, 5000)
     } catch (exception) {
-      // setErrorMessage('Wrong credentials')
-      // setTimeout(() => {
-      //   setErrorMessage(null)
-      // }, 5000)
       errorNotificationDispatch({ type: "LOGIN", payload: 'Wrong credentials'})
       setTimeout(() => {
         errorNotificationDispatch({ type: "CLEAR" })
@@ -140,87 +144,43 @@ const App = () => {
     }, 5000)
   }
 
-  // const addBlog = (blogObject) => {
-  //   blogFormRef.current.toggleVisibility()
-
-  //   blogService
-  //     .create(blogObject)
-  //     .then(returnedBlog => {
-  //       setBlogs(blogs.concat(returnedBlog))
-  //       // setNotificationMessage(`A new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
-  //       // setTimeout(() => {
-  //       //   setNotificationMessage(null)
-  //       // }, 5000)
-  //       setNewBlogCreated(!newBlogCreated)
-  //       notificationDispatch({ type: "CREATE", payload: `A new blog ${returnedBlog.title} by ${returnedBlog.author} added` })
-  //       setTimeout(() => {
-  //         notificationDispatch({ type: "CLEAR" })
-  //       }, 5000)
-  //     })
-  // }
-
   const updateBlog = id => {
     const likedBlog = blogs.find(blog => blog.id === id)
 
-    const blogObject = {
-      ...likedBlog,
-      likes: likedBlog.likes += 1
-    }
-
-    blogService
-      .update(id, blogObject)
-      .then(returnedBlog => {
-        setBlogs(
-          blogs.map(blog => (blog.id === returnedBlog.id ? returnedBlog : blog))
-        )
-        // setNotificationMessage('Like added')
-        // setTimeout(() => {
-        //   setNotificationMessage(null)
-        // }, 5000)
-        notificationDispatch({ type: "LIKE", payload: 'Like added' })
-        setTimeout(() => {
-          notificationDispatch({ type: "CLEAR" })
-        }, 5000)
-      })
-      .catch(error => {
-        // setErrorMessage('Cannot add Like', error.response.data)
-        // setTimeout(() => {
-        //   setErrorMessage(null)
-        // }, 5000)
+    updateBlogMutation.mutate({...likedBlog, likes: likedBlog.likes += 1}, {
+      onError: (error) => {
         errorNotificationDispatch({ type: "LIKE", payload: `Cannot add Like, ${error.response.data}`})
         setTimeout(() => {
           errorNotificationDispatch({ type: "CLEAR" })
         }, 5000)
-      })
+      },
+      onSuccess: () => {
+        notificationDispatch({ type: "LIKE", payload: 'Like added' })
+        setTimeout(() => {
+          notificationDispatch({ type: "CLEAR" })
+        }, 5000)
+      }
+    })
   }
 
   const deleteBlog = id => {
     const blogToDelete = blogs.find(blog => blog.id === id)
 
     if (window.confirm(`Remove blog ${blogToDelete.title} by ${blogToDelete.author}`)) {
-      blogService
-        .remove(id)
-        .then(() => {
-          setBlogs(blogs.filter(blog => blog.id !== id))
-          // setNotificationMessage('Blog removed')
-          // setTimeout(() => {
-          //   setNotificationMessage(null)
-          // }, 5000)
-          notificationDispatch({ type: "DELETE", payload: 'Blog removed' })
-          setTimeout(() => {
-            notificationDispatch({ type: "CLEAR" })
-          }, 5000)
-        })
-        .catch(error => {
-          // setErrorMessage('Cannot remove blog', error.response.data)
-          // setTimeout(() => {
-          //   setErrorMessage(null)
-          // }, 5000)
+      deleteBlogMutation.mutate(blogToDelete, {
+        onError: (error) => {
           errorNotificationDispatch({ type: "DELETE", payload: `Cannot remove blog, ${error.response.data}`})
           setTimeout(() => {
             errorNotificationDispatch({ type: "CLEAR" })
           }, 5000)
-        })
+        },
+        onSuccess: () => {
+          notificationDispatch({ type: "DELETE", payload: 'Blog removed' })
+          setTimeout(() => {
+            notificationDispatch({ type: "CLEAR" })
+          }, 5000)
+        }
+      })
     }
   }
 
@@ -240,7 +200,8 @@ const App = () => {
         />
       </Togglable>
 
-       {user !== null && unauthorizedError !== 'Unauthorized' ? 
+       {user !== null && unauthorizedError !== 'Unauthorized' && (
+
         <div>
            <p>{user.name} logged-in</p>
            <button onClick={handleLogout}>Logout</button>
@@ -262,11 +223,11 @@ const App = () => {
                 user={blog.user.username}
                 canUserDelete={user.username === blog.user.username}
               />
-           ) : <p>No blogs</p>}
-        </div>
-      :
-      <p></p>  
-    }
+           ) : (
+            <p>No blogs</p>
+          )}
+        </div> 
+    )}
     </div>
   )
 }
