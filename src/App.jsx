@@ -12,6 +12,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNotificationDispatch } from './components/NotificationContext'
 import { useErrorNotificationDispatch } from './components/ErrorNotificationContext'
 
+import { useReducer } from 'react'
+
+const userReducer = (state, action) => {
+  switch (action.type) {
+    case "SET_USER": 
+      return action.payload
+    case "REMOVE_USER": 
+      return null
+    default: 
+      return state
+  }
+}
+
 const App = () => {
 
   const notificationDispatch = useNotificationDispatch()
@@ -21,7 +34,9 @@ const App = () => {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null) // Here we store the user token
+  // const [user, setUser] = useState(null) // Here we store the user token
+
+  const [user, userDispatch] = useReducer(userReducer, null)
 
   const queryClient = useQueryClient()
 
@@ -62,7 +77,7 @@ const App = () => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
-      setUser(user)
+      userDispatch({ type: "SET_USER", payload: user })
       blogService.setToken(user.token)
     }
   }, [])
@@ -75,29 +90,31 @@ const App = () => {
     enabled: !!user, // Only fetch blogs if the user is logged in
     onError: (error) => {
       if (error.response && error.response.status === 401) {
-         setUnauthorizedError('Unauthorized')
-         setUser(null)
-         window.localStorage.removeItem('loggedBlogappUser')
+        setUnauthorizedError('Unauthorized')
+        userDispatch({ type: "REMOVE_USER" })
+        window.localStorage.removeItem('loggedBlogappUser')
       }
     }
   })
 
   if (result.isLoading) {
     return <div>Loading data...</div>
-  } if (result.isError) {
-    return <div>Service is unavaiable</div>
+  } else if (result.error?.message === "Request failed with status code 500") {
+    return <div>Currently service is unavaiable</div>
   }
-  
+
 
   const blogs = result.data || []
   // console.log(blogs)
-  // console.log(result)
+  // console.log(JSON.stringify(result.error, null, 2))
+  // console.log(result.error?.config.method)
+  // console.log(result.error?.message)
   // console.log(unauthorizedError)
 
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
-    setUser(null)
+    userDispatch({ type: "REMOVE_USER" })
     notificationDispatch({ type: "LOGOUT", payload: 'Logged out successfully' })
     setTimeout(() => {
       notificationDispatch({ type: "CLEAR" })
@@ -118,7 +135,7 @@ const App = () => {
       )
 
       blogService.setToken(user.token) // Setting the token to the blogService
-      setUser(user) // Storing the user token
+      userDispatch({ type: "SET_USER", payload: user }) // Storing the user token
       setUsername('')
       setPassword('')
       notificationDispatch({ type: "LOGIN", payload: 'Logged in successfully' })
