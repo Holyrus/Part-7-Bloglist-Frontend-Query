@@ -142,6 +142,10 @@ const App = () => {
       setTimeout(() => {
         notificationDispatch({ type: "CLEAR" })
       }, 5000)
+
+      // Need invalidation after logging in to display the blog list
+      queryClient.invalidateQueries({ queryKey: ['blogs'] })
+    
     } catch (exception) {
       errorNotificationDispatch({ type: "LOGIN", payload: 'Wrong credentials'})
       setTimeout(() => {
@@ -201,16 +205,15 @@ const App = () => {
     }
   }
 
-    // result.error?.message !== "Request failed with status code 401" && result.error?.config.method !== "get"
-
-    // Show login form and list conditionally
-
   return (
     <div>
+
       <h1>Blogs</h1>
       <Notification />
       <ErrorNotification />
 
+    {user === null || (result.error?.message === "Request failed with status code 401" && result.error?.config.method === "get") ? (
+      
       <Togglable buttonLabel='login'>
         <LoginForm
           username={username}
@@ -221,19 +224,19 @@ const App = () => {
         />
       </Togglable>
 
-       {user !== null && unauthorizedError !== 'Unauthorized' && (
+    ) : (
 
-        <div>
-           <p>{user.name} logged-in</p>
-           <button onClick={handleLogout}>Logout</button>
-           <Togglable buttonLabel='new blog' ref={blogFormRef}>
-              <BlogForm
-                createBlog={addBlog}
-              />
-           </Togglable>
-           <h2>blogs</h2>
-           { blogs.length !== 0 ?
-           [...blogs]
+      <div>
+        <p>{user.name} logged-in</p>
+        <button onClick={handleLogout}>Logout</button>
+        <Togglable buttonLabel='new blog' ref={blogFormRef}>
+          <BlogForm
+            createBlog={addBlog}
+          />
+        </Togglable>
+        <h2>blogs</h2>
+        { blogs.length !== 0 ?
+          [...blogs]
             .sort((a, b) => b.likes - a.likes)
             .map(blog =>
               <Blog
@@ -247,8 +250,10 @@ const App = () => {
            ) : (
             <p>No blogs</p>
           )}
-        </div> 
+        </div>
+
     )}
+
     </div>
   )
 }
