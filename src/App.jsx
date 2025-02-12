@@ -22,7 +22,7 @@ const userReducer = (state, action) => {
       return action.payload
     case "REMOVE_USER": 
       return null
-    default: 
+    default:
       return state
   }
 }
@@ -162,7 +162,6 @@ const App = () => {
 
   const handleSignUp = async (event) => {
     event.preventDefault()
-    console.log(signUpUsername, signUpName, signUpPassword)
 
     try {
 
@@ -188,6 +187,26 @@ const App = () => {
       }, 5000)
     }
 
+  }
+
+  const handleAccountDeleting = async () => {
+    if (window.confirm('Are you sure you want to delete your account?')) {
+      try {
+        signUpService.setToken(user.token)
+        await signUpService.remove(user.id)
+        window.localStorage.removeItem('loggedBlogappUser')
+        userDispatch({ type: "REMOVE_USER" })
+        notificationDispatch({ type: "DELETE_ACCOUNT", payload: 'Account deleted successfully' })
+        setTimeout(() => {
+          notificationDispatch({ type: "CLEAR" })
+        }, 5000)
+      } catch (exception) {
+        errorNotificationDispatch({ type: "DELETE_ACCOUNT", payload: `Failed to delete account ${exception}` })
+        setTimeout(() => {
+          errorNotificationDispatch({ type: "CLEAR" })
+        }, 5000)
+      }
+    }
   }
 
   const addBlog = async (blogObject) => {
@@ -301,6 +320,8 @@ const App = () => {
            ) : (
             <p>No blogs</p>
           )}
+
+          <button onClick={handleAccountDeleting}>Delete account</button>
         </div>
 
     )}

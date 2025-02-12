@@ -6,6 +6,8 @@ const errorNotificationReducer = (state, action) => {
       return action.payload
     case "SIGNUP":
       return action.payload
+    case "DELETE_ACCOUNT":
+      return action.payload
     case "LIKE": 
       return action.payload
     case "DELETE": 
