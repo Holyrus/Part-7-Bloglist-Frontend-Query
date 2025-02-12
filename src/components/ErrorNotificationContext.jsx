@@ -4,6 +4,8 @@ const errorNotificationReducer = (state, action) => {
   switch(action.type) {
     case "LOGIN":
       return action.payload
+    case "SIGNUP":
+      return action.payload
     case "LIKE": 
       return action.payload
     case "DELETE": 

@@ -1,34 +1,39 @@
-import React from 'react'
-
-const LoginForm = ({ handleSubmit, handleUsernameChange, handlePasswordChange, username, password }) => {
+const SignUpForm = ({handleSubmit, handleUsernameChange, handleNameChange, handlePasswordChange, username, name, password}) => {
   return (
     <div>
-      <h2>Login</h2>
+      <h2>Sign Up</h2>
 
       <form onSubmit={handleSubmit}>
         <div>
           Username
           <br />
           <input
-            data-testid='username'
             value={username}
             onChange={handleUsernameChange}
+          />
+        </div>
+        <div>
+          Name
+          <br />
+          <input
+            value={name}
+            onChange={handleNameChange}
           />
         </div>
         <div>
           Password
           <br />
           <input
-            data-testid='password'
             type="password"
             value={password}
             onChange={handlePasswordChange}
           />
         </div>
-        <button type="submit">Login</button>
+        <br />
+        <button type="submit">Sign Up</button>
       </form>
     </div>
   )
 }
 
-export default LoginForm
+export default SignUpForm

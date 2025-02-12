@@ -4,6 +4,7 @@ import ErrorNotification from './components/ErrorNotification'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import signUpService from './services/signup'
 import LoginForm from './components/LoginForm'
 import Togglable from './components/Togglable'
 import BlogForm from './components/BlogForm'
@@ -13,6 +14,7 @@ import { useNotificationDispatch } from './components/NotificationContext'
 import { useErrorNotificationDispatch } from './components/ErrorNotificationContext'
 
 import { useReducer } from 'react'
+import SignUpForm from './components/SignUpForm'
 
 const userReducer = (state, action) => {
   switch (action.type) {
@@ -37,6 +39,10 @@ const App = () => {
   // const [user, setUser] = useState(null) // Here we store the user token
 
   const [user, userDispatch] = useReducer(userReducer, null)
+
+  const [signUpUsername, setSignUpUsername] = useState('')
+  const [signUpName, setSignUpName] = useState('')
+  const [signUpPassword, setSignUpPassword] = useState('')
 
   const queryClient = useQueryClient()
 
@@ -154,6 +160,36 @@ const App = () => {
     }
   }
 
+  const handleSignUp = async (event) => {
+    event.preventDefault()
+    console.log(signUpUsername, signUpName, signUpPassword)
+
+    try {
+
+      const username = signUpUsername
+      const name = signUpName
+      const password = signUpPassword
+
+      await signUpService.signup({
+        username, name, password
+      })
+
+      setSignUpUsername('')
+      setSignUpName('')
+      setSignUpPassword('')
+      notificationDispatch({ type: "SIGNUP", payload: 'Created new account successfully' })
+        setTimeout(() => {
+          notificationDispatch({ type: "CLEAR" })
+        }, 5000)
+    } catch (exception) {
+      errorNotificationDispatch({ type: "SIGNUP", payload: 'Wrong validation'})
+      setTimeout(() => {
+        errorNotificationDispatch({ type: "CLEAR" })
+      }, 5000)
+    }
+
+  }
+
   const addBlog = async (blogObject) => {
     blogFormRef.current.toggleVisibility()
 
@@ -213,16 +249,31 @@ const App = () => {
       <ErrorNotification />
 
     {user === null || (result.error?.message === "Request failed with status code 401" && result.error?.config.method === "get") ? (
-      
-      <Togglable buttonLabel='login'>
-        <LoginForm
-          username={username}
-          password={password}
-          handleUsernameChange={({ target }) => setUsername(target.value)}
-          handlePasswordChange={({ target }) => setPassword(target.value)}
-          handleSubmit={handleLogin}
-        />
-      </Togglable>
+      <div>
+        <Togglable buttonLabel='Sign up'>
+          <SignUpForm
+            username={signUpUsername}
+            name={signUpName}
+            password={signUpPassword}
+            handleUsernameChange={({ target }) => setSignUpUsername(target.value)}
+            handleNameChange={({ target }) => setSignUpName(target.value)}
+            handlePasswordChange={({ target }) => setSignUpPassword(target.value)}
+            handleSubmit={handleSignUp}
+          />
+        </Togglable>
+
+        <br />
+
+        <Togglable buttonLabel='Login'>
+          <LoginForm
+            username={username}
+            password={password}
+            handleUsernameChange={({ target }) => setUsername(target.value)}
+            handlePasswordChange={({ target }) => setPassword(target.value)}
+            handleSubmit={handleLogin}
+          />
+        </Togglable>
+      </div>
 
     ) : (
 
