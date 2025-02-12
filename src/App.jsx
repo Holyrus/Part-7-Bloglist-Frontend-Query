@@ -5,6 +5,7 @@ import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import signUpService from './services/signup'
+import usersService from './services/users'
 import LoginForm from './components/LoginForm'
 import Togglable from './components/Togglable'
 import BlogForm from './components/BlogForm'
@@ -50,6 +51,7 @@ const App = () => {
     mutationFn: blogService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
     },
   })
 
@@ -70,6 +72,7 @@ const App = () => {
         return oldData.filter(blog => blog.id !== deletedBlog.id)
       })
       queryClient.invalidateQueries(['blogs'])
+      queryClient.invalidateQueries(['users'])
     }
   })
 
@@ -102,6 +105,18 @@ const App = () => {
       }
     }
   })
+
+  const usersResult = useQuery({
+    queryKey: ['users'],
+    queryFn: usersService.getAllUsers,
+    refetchOnWindowFocus: false,
+    retry: false,
+    enabled: !!user,
+  })
+
+  const users = usersResult.data || []
+
+  // console.log(users)
 
   if (result.isLoading) {
     return <div>Loading data...</div>
@@ -141,6 +156,7 @@ const App = () => {
       )
 
       blogService.setToken(user.token) // Setting the token to the blogService
+      usersService.setToken(user.token)
       userDispatch({ type: "SET_USER", payload: user }) // Storing the user token
       setUsername('')
       setPassword('')
@@ -151,6 +167,7 @@ const App = () => {
 
       // Need invalidation after logging in to display the blog list
       queryClient.invalidateQueries({ queryKey: ['blogs'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
     
     } catch (exception) {
       errorNotificationDispatch({ type: "LOGIN", payload: 'Wrong credentials'})
@@ -299,12 +316,22 @@ const App = () => {
       <div>
         <p>{user.name} logged-in</p>
         <button onClick={handleLogout}>Logout</button>
-        <Togglable buttonLabel='new blog' ref={blogFormRef}>
+        <Togglable buttonLabel='New blog' ref={blogFormRef}>
           <BlogForm
             createBlog={addBlog}
           />
         </Togglable>
-        <h2>blogs</h2>
+
+        <h2>Users</h2>
+
+        { users.length !== 0 && 
+          [...users]
+            .map(user =>
+              <p key={user.id}>{user.name} has {user.blogs.length} {user.blogs.length === 1 ? 'blog' : 'blogs'}</p>
+            )
+        }
+
+        <h2>All Blogs</h2>
         { blogs.length !== 0 ?
           [...blogs]
             .sort((a, b) => b.likes - a.likes)
