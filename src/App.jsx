@@ -17,6 +17,15 @@ import { useErrorNotificationDispatch } from './components/ErrorNotificationCont
 import { useReducer } from 'react'
 import SignUpForm from './components/SignUpForm'
 
+import {
+  Routes, Route, useMatch
+} from 'react-router-dom'
+
+import Menu from './components/Menu'
+import AllBlogs from './components/AllBlogs'
+import Users from './components/Users'
+import User from './components/User'
+
 const userReducer = (state, action) => {
   switch (action.type) {
     case "SET_USER": 
@@ -116,7 +125,12 @@ const App = () => {
 
   const users = usersResult.data || []
 
-  // console.log(users)
+  const match = useMatch('/users/:id')
+  const singleUser = match ? users.find(user => user.id === match.params.id) : null;
+
+  console.log(singleUser)
+
+  console.log(users)
 
   if (result.isLoading) {
     return <div>Loading data...</div>
@@ -314,24 +328,25 @@ const App = () => {
     ) : (
 
       <div>
+        <Menu />
         <p>{user.name} logged-in</p>
         <button onClick={handleLogout}>Logout</button>
+        <br />
+        <br />
+
         <Togglable buttonLabel='New blog' ref={blogFormRef}>
           <BlogForm
             createBlog={addBlog}
           />
         </Togglable>
 
-        <h2>Users</h2>
+        <Routes>
+          <Route path='/' element={<AllBlogs blogs={blogs} updateBlog={updateBlog} deleteBlog={deleteBlog} user={user}/>} />
+          <Route path='/users' element={<Users users={users}/>} />
+          <Route path='/users/:id' element={<User user={singleUser}/>} />
+        </Routes>
 
-        { users.length !== 0 && 
-          [...users]
-            .map(user =>
-              <p key={user.id}>{user.name} has {user.blogs.length} {user.blogs.length === 1 ? 'blog' : 'blogs'}</p>
-            )
-        }
-
-        <h2>All Blogs</h2>
+        {/* <h2>All Blogs</h2>
         { blogs.length !== 0 ?
           [...blogs]
             .sort((a, b) => b.likes - a.likes)
@@ -346,7 +361,7 @@ const App = () => {
               />
            ) : (
             <p>No blogs</p>
-          )}
+          )} */}
 
           <button onClick={handleAccountDeleting}>Delete account</button>
         </div>
