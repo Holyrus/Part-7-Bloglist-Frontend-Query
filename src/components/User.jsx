@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 
 const User = ({ user }) => {
 
@@ -7,6 +8,8 @@ const User = ({ user }) => {
 
   return (
     <div>
+      <br/>
+      <button><Link to={'/users'}>Back</Link></button>
       <h2>{user.name}</h2>
       <h4>Added blogs</h4>
       {user.blogs.length !== 0 ?

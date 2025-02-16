@@ -132,14 +132,17 @@ const App = () => {
 
   console.log(users)
 
+  const blogs = result.data || []
+
+  const blogsMatch = useMatch('/blogs/:id')
+  const singleBlog = blogsMatch ? blogs.find(blog => blog.id === blogsMatch.params.id) : null;
+
   if (result.isLoading) {
     return <div>Loading data...</div>
   } else if (result.error?.message === "Request failed with status code 500") {
     return <div>Currently service is unavaiable</div>
   }
 
-
-  const blogs = result.data || []
   // console.log(blogs)
   // console.log(JSON.stringify(result.error, null, 2))
   // console.log(result.error?.config.method)
@@ -328,11 +331,8 @@ const App = () => {
     ) : (
 
       <div>
-        <Menu />
-        <p>{user.name} logged-in</p>
-        <button onClick={handleLogout}>Logout</button>
-        <br />
-        <br />
+        <Menu user={user} handleLogout={handleLogout}/>
+        <br/>
 
         <Togglable buttonLabel='New blog' ref={blogFormRef}>
           <BlogForm
@@ -340,28 +340,14 @@ const App = () => {
           />
         </Togglable>
 
+        <br/>
+
         <Routes>
-          <Route path='/' element={<AllBlogs blogs={blogs} updateBlog={updateBlog} deleteBlog={deleteBlog} user={user}/>} />
+          <Route path='/' element={<AllBlogs blogs={blogs} />} />
           <Route path='/users' element={<Users users={users}/>} />
           <Route path='/users/:id' element={<User user={singleUser}/>} />
+          <Route path='/blogs/:id' element={<Blog singleBlog={singleBlog} updateBlog={updateBlog} deleteBlog={deleteBlog} user={user}/>} />
         </Routes>
-
-        {/* <h2>All Blogs</h2>
-        { blogs.length !== 0 ?
-          [...blogs]
-            .sort((a, b) => b.likes - a.likes)
-            .map(blog =>
-              <Blog
-                key={blog.id}
-                blog={blog}
-                updateBlog={updateBlog}
-                deleteBlog={deleteBlog}
-                user={blog.user.username}
-                canUserDelete={user.username === blog.user.username}
-              />
-           ) : (
-            <p>No blogs</p>
-          )} */}
 
           <button onClick={handleAccountDeleting}>Delete account</button>
         </div>
