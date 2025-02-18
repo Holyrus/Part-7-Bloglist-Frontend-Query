@@ -1,8 +1,12 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Link } from "react-router-dom"
+import blogService from '../services/blogs'
 
 const Blog = ({ singleBlog, updateBlog, deleteBlog, user }) => {
+
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
 
   const navigate = useNavigate()
 
@@ -11,6 +15,27 @@ const Blog = ({ singleBlog, updateBlog, deleteBlog, user }) => {
       navigate('/')
     }
   }, [singleBlog, navigate])
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      const comments = await blogService.getComments(singleBlog.id);
+      setComments(comments);
+    }
+    fetchComments()
+  }, [singleBlog.id])
+
+  const handleCommentChange = (event) => {
+    setNewComment(event.target.value);
+  }
+
+  const handleCommentSubmit = async (event) => {
+    event.preventDefault();
+    const comment = { content: newComment };
+    await blogService.addComment(singleBlog.id, comment)
+    const updatedComments = await blogService.getComments(singleBlog.id)
+    setComments(updatedComments);
+    setNewComment('');
+  }
 
   if (!singleBlog) {
     return null
@@ -42,6 +67,28 @@ const Blog = ({ singleBlog, updateBlog, deleteBlog, user }) => {
         </div>
         {canUserDelete && 
         removeBtn()}
+
+        <h3>Comments</h3>
+          {comments.length !== 0 ? (
+            <ul>
+              {comments.map((comment) => (
+                <li key={comment.id}>
+                  {comment.content} by {comment.user.username}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No comments</p>
+          )}
+        <h3>Leave comment</h3>
+        <form onSubmit={handleCommentSubmit}>
+          <input
+            type="text"
+            value={newComment}
+            onChange={handleCommentChange}
+          />
+          <button type="submit">Add Comment</button>
+        </form>
     </div>
   )
 }
