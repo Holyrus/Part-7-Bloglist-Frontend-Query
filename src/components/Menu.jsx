@@ -7,13 +7,13 @@ const Menu = ({user, handleLogout}) => {
   }
 
   return (
-    <div>
+    <div className="flex flex-row items-center justify-start p-4">
+      <h1 className="">Blogs</h1>
       <Link style={padding} to="/">Main</Link>
       <Link style={padding} to="/users">Users</Link>
       <p>{user.name} logged-in</p>
       <button onClick={handleLogout}>Logout</button>
     </div>
-    
   )
 }
 

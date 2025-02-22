@@ -39,6 +39,19 @@ const userReducer = (state, action) => {
 
 const App = () => {
 
+  const [loginVisibility, setLoginVisibility] = useState(false)
+  const [signUpVisibility, setSignUpVisibility] = useState(false)
+  
+  const handleLoginClick = () => {
+    setLoginVisibility(false);
+    setSignUpVisibility(true);
+  }
+
+  const handleSignUpClick = () => {
+    setLoginVisibility(true);
+    setSignUpVisibility(false);
+  }
+
   const notificationDispatch = useNotificationDispatch()
   const errorNotificationDispatch = useErrorNotificationDispatch()
 
@@ -295,44 +308,44 @@ const App = () => {
   }
 
   return (
-    <div>
-
-      <h1>Blogs</h1>
-      <Notification />
-      <ErrorNotification />
+    <main className="antialiased overflow-x-hidden">
 
     {user === null || (result.error?.message === "Request failed with status code 401" && result.error?.config.method === "get") ? (
-      <div>
-        <Togglable buttonLabel='Sign up'>
-          <SignUpForm
-            username={signUpUsername}
-            name={signUpName}
-            password={signUpPassword}
-            handleUsernameChange={({ target }) => setSignUpUsername(target.value)}
-            handleNameChange={({ target }) => setSignUpName(target.value)}
-            handlePasswordChange={({ target }) => setSignUpPassword(target.value)}
-            handleSubmit={handleSignUp}
-          />
-        </Togglable>
+      <div className="bg-[#d8a71f88] flex flex-col items-center justify-center w-full h-[100vh] pb-16">
+        <Notification />
+        <ErrorNotification />
+        <h1 className="font-semibold text-[2rem] underline hover:no-underline">Blogs</h1>
+        <div className="flex flex-row">
+          <Togglable buttonLabel='Sign up' clickHandle={handleLoginClick} formVisibility={signUpVisibility}>
+            <SignUpForm
+              username={signUpUsername}
+              name={signUpName}
+              password={signUpPassword}
+              handleUsernameChange={({ target }) => setSignUpUsername(target.value)}
+              handleNameChange={({ target }) => setSignUpName(target.value)}
+              handlePasswordChange={({ target }) => setSignUpPassword(target.value)}
+              handleSubmit={handleSignUp}
+            />
+          </Togglable>
 
-        <br />
-
-        <Togglable buttonLabel='Login'>
-          <LoginForm
-            username={username}
-            password={password}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
-            handleSubmit={handleLogin}
-          />
-        </Togglable>
+          <Togglable buttonLabel='Login' clickHandle={handleSignUpClick} formVisibility={loginVisibility}>
+            <LoginForm
+              username={username}
+              password={password}
+              handleUsernameChange={({ target }) => setUsername(target.value)}
+              handlePasswordChange={({ target }) => setPassword(target.value)}
+              handleSubmit={handleLogin}
+            />
+          </Togglable>
+        </div>
       </div>
 
     ) : (
 
       <div>
+        <Notification />
+        <ErrorNotification />
         <Menu user={user} handleLogout={handleLogout}/>
-        <br/>
 
         <Togglable buttonLabel='New blog' ref={blogFormRef}>
           <BlogForm
@@ -354,7 +367,7 @@ const App = () => {
 
     )}
 
-    </div>
+    </main>
   )
 }
 
