@@ -40,11 +40,12 @@ const BlogForm = ({ createBlog }) => {
   }
   
   return (
-    <div className="formDiv">
-      <h2>Create new blog</h2>
+    <div className="formDiv flex flex-col">
+      <h2 className="font-semibold underline text-2xl">Create new blog</h2>
 
-      <form onSubmit={addBlog}>
+      <form className="py-2 text-[16px]" onSubmit={addBlog}>
         <input
+          className="bg-white border-2 border-black text-black w-full pl-1 mb-1 placeholder-[#707073ff] font-medium curson-text"
           data-testid='title'
           value={newTitle}
           onChange={(e) => handleTitleChange(e)}
@@ -52,6 +53,7 @@ const BlogForm = ({ createBlog }) => {
         />
         <br />
         <input
+          className="bg-white border-2 border-black text-black w-full pl-1 mb-1 placeholder-[#707073ff] font-medium curson-text"
           data-testid='author'
           value={newAuthor}
           onChange={(e) => handleAuthorChange(e)}
@@ -59,6 +61,7 @@ const BlogForm = ({ createBlog }) => {
         />
         <br />
         <input
+          className="bg-white border-2 border-black text-black w-full pl-1 mb-1 placeholder-[#707073ff] font-medium curson-text"
           data-testid='url'
           value={newUrl}
           onChange={(e) => handleUrlChange(e)}
@@ -66,12 +69,13 @@ const BlogForm = ({ createBlog }) => {
         />
         <br />
         <input
+          className="bg-white border-2 border-black text-black w-full pl-1 mb-2 placeholder-[#707073ff] font-medium curson-text"
           data-testid='likes'
           value={newLikes}
           onChange={(e) => handleLikesChange(e)}
           placeholder='Likes'
         />
-        <button type="submit">Save</button>
+        <button className="font-semibold border-2 rounded-full p-2 px-3 border-black bg-emerald-400 hover:bg-emerald-500" type="submit">Save</button>
       </form>
     </div>
   )

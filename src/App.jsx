@@ -259,12 +259,20 @@ const App = () => {
   const addBlog = async (blogObject) => {
     blogFormRef.current.toggleVisibility()
 
-    newBlogMutation.mutate(blogObject)
-
-    notificationDispatch({ type: "CREATE", payload: `A new blog ${blogObject.title} by ${blogObject.author} added` })
-    setTimeout(() => {
-      notificationDispatch({ type: "CLEAR" })
-    }, 5000)
+    newBlogMutation.mutate(blogObject, {
+      onError: (error) => {
+        errorNotificationDispatch({ type: "CREATE", payload: `Cannot create new blog, ${error.response.data.error}`})
+        setTimeout(() => {
+          errorNotificationDispatch({ type: "CLEAR" })
+        }, 5000)
+      },
+      onSuccess: () => {
+        notificationDispatch({ type: "CREATE", payload: `A new blog ${blogObject.title} by ${blogObject.author} added` })
+        setTimeout(() => {
+          notificationDispatch({ type: "CLEAR" })
+        }, 5000)
+      }
+    })
   }
 
   const updateBlog = id => {
@@ -314,8 +322,8 @@ const App = () => {
       <div className="bg-[#d8a71f88] flex flex-col items-center justify-center w-full h-[100vh] pb-16">
         <Notification />
         <ErrorNotification />
-        <h1 className="font-semibold text-[2rem] underline hover:no-underline">Blogs</h1>
-        <div className="flex flex-row">
+        <h1 className="font-semibold text-[2rem] underline hover:no-underline mb-4">Blogs</h1>
+        <div className="flex flex-row gap-10">
           <Togglable buttonLabel='Sign up' clickHandle={handleLoginClick} formVisibility={signUpVisibility}>
             <SignUpForm
               username={signUpUsername}
@@ -343,27 +351,27 @@ const App = () => {
     ) : (
 
       <div>
+        <Menu user={user} handleLogout={handleLogout}/>
         <Notification />
         <ErrorNotification />
-        <Menu user={user} handleLogout={handleLogout}/>
+        <div className='flex lex-row items-start justify-evenly bg-amber-100 py-7'>
+          <Routes>
+            <Route path='/' element={<AllBlogs blogs={blogs} />} />
+            <Route path='/users' element={<Users users={users}/>} />
+            <Route path='/users/:id' element={<User user={singleUser}/>} />
+            <Route path='/blogs/:id' element={<Blog singleBlog={singleBlog} updateBlog={updateBlog} deleteBlog={deleteBlog} user={user}/>} />
+          </Routes>
 
-        <Togglable buttonLabel='New blog' ref={blogFormRef}>
-          <BlogForm
-            createBlog={addBlog}
-          />
-        </Togglable>
-
-        <br/>
-
-        <Routes>
-          <Route path='/' element={<AllBlogs blogs={blogs} />} />
-          <Route path='/users' element={<Users users={users}/>} />
-          <Route path='/users/:id' element={<User user={singleUser}/>} />
-          <Route path='/blogs/:id' element={<Blog singleBlog={singleBlog} updateBlog={updateBlog} deleteBlog={deleteBlog} user={user}/>} />
-        </Routes>
-
-          <button onClick={handleAccountDeleting}>Delete account</button>
+          <Togglable buttonLabel='New blog' ref={blogFormRef}>
+            <BlogForm
+              createBlog={addBlog}
+            />
+          </Togglable>
         </div>
+        <footer className="bg-amber-400 p-4">
+          <button className="font-medium text-[12px] border-2 border-black rounded-3xl p-1.5 px-2 bg-red-600 text-black hover:bg-red-400" onClick={handleAccountDeleting}>Delete account</button>
+        </footer>
+      </div>
 
     )}
 

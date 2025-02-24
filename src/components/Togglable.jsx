@@ -7,11 +7,14 @@ const Togglable = forwardRef((props, refs) => {
   const showWhenVisible = { display: visible ? "" : "none" };
 
   const toggleVisibility = () => {
-    props.clickHandle()
+    if (props.formVisibility !== undefined) {
+      props.clickHandle()
+    }
     setVisible(!visible);
   };
 
-  console.log(props.formVisibility)
+  console.log('Visibility', visible)
+  console.log('Forms', props.formVisibility)
 
   useImperativeHandle(refs, () => {
     return {
@@ -24,7 +27,7 @@ const Togglable = forwardRef((props, refs) => {
   }, [props.formVisibility])
 
   return (
-    <div className="m-4">
+    <div>
       <div style={hideWhenVisible}>
         <button onClick={toggleVisibility} className="font-bold border-2 rounded-full border-black p-3 px-4 bg-amber-200 hover:bg-amber-300">{props.buttonLabel}</button>
       </div>

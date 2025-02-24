@@ -41,53 +41,47 @@ const Blog = ({ singleBlog, updateBlog, deleteBlog, user }) => {
     return null
   }
 
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    borderWidth: 1,
-    marginBottom: 5
-  }
-
   const canUserDelete = user.username === singleBlog.user.username ? true : false
 
   const removeBtn = () => {
-    return <button onClick={() => deleteBlog(singleBlog.id)}>Remove</button>
+    return <button className="mt-2 px-2 py-1 bg-red-800 text-white rounded-3xl text-[12px] hover:bg-red-700" onClick={() => deleteBlog(singleBlog.id)}>Remove</button>
   }
 
   return (
-    <div style={blogStyle} className='blog'>
-        <button><Link to={'/'}>Back</Link></button>
+    <div className='blog'>
+        <button className="bg-amber-600 border-2 rounded-full border-black px-3 py-1 hover:bg-amber-300" ><Link to={'/'}>Back</Link></button>
       {/* CSS attribute className 'blog' is used for access the component in tests */}
-        <h2>{singleBlog.title}</h2>
+        <h2 className="text-2xl font-bold mt-2">{singleBlog.title}</h2>
         <p><i>Author - {singleBlog.author}</i></p>
         <div>
-          <a href={singleBlog.url}>{singleBlog.url}</a> 
-          <h4>{singleBlog.likes} - Likes <button onClick={() => updateBlog(singleBlog.id)}>Like</button></h4>
+          <a href={singleBlog.url} className="text-blue-600">{singleBlog.url}</a> 
+          <h4 className="font-semibold">{singleBlog.likes} - Likes <button className="border-2 bg-green-400 rounded-2xl px-1.5 py-0.3 hover:bg-green-500" onClick={() => updateBlog(singleBlog.id)}>Like</button></h4>
           <p><b>Created by {singleBlog.user.name}</b></p>
         </div>
         {canUserDelete && 
         removeBtn()}
 
-        <h3>Comments</h3>
+        <h3 className="font-semibold text-2xl mt-2">Comments</h3>
           {comments.length !== 0 ? (
-            <ul>
+            <ul className="border-2 rounded-2xl p-2 my-3">
               {comments.map((comment) => (
-                <li key={comment.id}>
-                  {comment.content} by {comment.user.username}
+                <li className="border-b-2" key={comment.id}>
+                  {comment.content} by <b>{comment.user.username}</b>
                 </li>
               ))}
             </ul>
           ) : (
             <p>No comments</p>
           )}
-        <h3>Leave comment</h3>
+        <h3 className="font-semibold">Leave comment</h3>
         <form onSubmit={handleCommentSubmit}>
           <input
+            className="bg-white text-[13px] border-2 border-black text-black pl-1 placeholder-[#707073ff] font-medium curson-text mr-1.5"
             type="text"
             value={newComment}
             onChange={handleCommentChange}
           />
-          <button type="submit">Add Comment</button>
+          <button className="text-[12px] font-semibold border-2 bg-blue-400 hover:bg-blue-300 py-1 px-2 rounded-sm" type="submit">Comment</button>
         </form>
     </div>
   )
