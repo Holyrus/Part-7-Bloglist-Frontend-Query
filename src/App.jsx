@@ -352,8 +352,7 @@ const App = () => {
 
       <div>
         <Menu user={user} handleLogout={handleLogout}/>
-        <Notification />
-        <ErrorNotification />
+        
         <div className='flex lex-row items-start justify-evenly bg-amber-100 py-7'>
           <Routes>
             <Route path='/' element={<AllBlogs blogs={blogs} />} />

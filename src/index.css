@@ -3,10 +3,11 @@
 .error {
   color: red;
   background: lightgrey;
-  font-size: 20px;
+  font-size: 16px;
   border-style: solid;
   border-radius: 5px;
-  padding: 10px;
+  padding: 2px;
+  max-width: 500px;
 }
 
 .notification {
@@ -15,5 +16,5 @@
   font-size: 20px;
   border-style: solid;
   border-radius: 5px;
-  padding: 10px;
+  padding: 5px;
 }
